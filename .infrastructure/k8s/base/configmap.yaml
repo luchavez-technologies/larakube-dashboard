@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laravel-config
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: "https://dashboard.dev.test"
+  ASSET_URL: "https://dashboard.dev.test"
+  DB_CONNECTION: "sqlite"
+  DB_DATABASE: "/var/lib/larakube/database.sqlite"
+  AUTORUN_LARAVEL_MIGRATION_SKIP_DB_CHECK: "true"
+  CACHE_STORE: "database"
+  SESSION_DRIVER: "database"
+  MAIL_MAILER: "smtp"
+  MAIL_HOST: "mailpit"
+  MAIL_PORT: "1025"
+  MAIL_USERNAME: "null"
+  MAIL_PASSWORD: "null"
+  MAIL_ENCRYPTION: "null"

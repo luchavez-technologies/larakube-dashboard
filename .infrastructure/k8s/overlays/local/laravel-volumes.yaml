@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dashboard-laravel-storage-pv
+  labels:
+    larakube-project: dashboard
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /Users/jsluchavez/Codes/Ideas/laravel-k8s/dashboard/storage
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dashboard-laravel-data-pv
+  labels:
+    larakube-project: dashboard
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /Users/jsluchavez/Codes/Ideas/laravel-k8s/dashboard/.infrastructure/volume_data
+    type: DirectoryOrCreate

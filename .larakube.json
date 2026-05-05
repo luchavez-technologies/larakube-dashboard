@@ -1,0 +1,25 @@
+{
+    "id": "37845086-4fb1-48f8-8096-bd349e06f3ca",
+    "name": "dashboard",
+    "path": "/Users/jsluchavez/Codes/Ideas/laravel-k8s/dashboard",
+    "blueprint": "filament",
+    "serverVariation": "fpm-nginx",
+    "frontend": null,
+    "phpVersion": null,
+    "os": null,
+    "email": "james@luchtech.dev",
+    "additionalExtensions": [],
+    "features": [],
+    "scoutDriver": null,
+    "packageManager": "npm",
+    "objectStorage": "none",
+    "cacheDriver": "database",
+    "databases": [
+        "sqlite"
+    ],
+    "environments": [
+        "local",
+        "production"
+    ],
+    "githubActions": true
+}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dashboard-local
+  labels:
+    larakube.io/project: dashboard
+    larakube.io/managed-by: larakube
