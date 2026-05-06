@@ -13,7 +13,14 @@ USER www-data
 ############################################
 # PHP Dependencies
 ############################################
-FROM composer:2 AS vendor
+FROM base AS vendor
+
+# Switch to root to install dependencies
+USER root
+
+# Copy composer from official image
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install \
@@ -21,7 +28,6 @@ RUN composer install \
     --no-interaction \
     --no-plugins \
     --no-scripts \
-    --ignore-platform-reqs \
     --prefer-dist
 
 ############################################
