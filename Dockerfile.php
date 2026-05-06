@@ -11,6 +11,29 @@ RUN install-php-extensions intl
 USER www-data
 
 ############################################
+# PHP Dependencies
+############################################
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --prefer-dist
+
+############################################
+# Frontend Assets
+############################################
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+############################################
 # Development Image
 ############################################
 FROM base AS development
@@ -35,14 +58,6 @@ RUN apk add --no-cache nodejs npm && \
 USER www-data
 
 ############################################
-# CI image
-############################################
-FROM base AS ci
-
-# Sometimes CI images need to run as root
-USER root
-
-############################################
 # Production Image
 ############################################
 FROM base AS deploy
@@ -53,9 +68,13 @@ USER root
 # Copy application files
 COPY --chown=www-data:www-data . /var/www/html
 
-# Ensure storage and bootstrap are owned by www-data
-# Sub-paths will be handled by K8s volume mounts
-RUN mkdir -p storage bootstrap/cache && \
+# Copy pre-built dependencies and assets from previous stages
+COPY --from=vendor --chown=www-data:www-data /app/vendor /var/www/html/vendor
+COPY --from=assets --chown=www-data:www-data /app/public/build /var/www/html/public/build
+
+# Final system preparation
+RUN rm -rf /var/www/html/node_modules && \
+    mkdir -p storage bootstrap/cache && \
     mkdir -p .infrastructure/volume_data/sqlite && \
     chown -R www-data:www-data storage bootstrap/cache .infrastructure/volume_data/sqlite && \
     chmod -R 775 storage bootstrap/cache
