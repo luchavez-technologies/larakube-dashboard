@@ -31,7 +31,7 @@ RUN apk add --no-cache nodejs npm && \
     docker-php-serversideup-set-id www-data $USER_ID:$GROUP_ID  && \
     docker-php-serversideup-set-file-permissions --owner $USER_ID:$GROUP_ID
 
-# Drop privileges back to www-data    
+# Drop privileges back to www-data
 USER www-data
 
 ############################################

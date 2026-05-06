@@ -7,3 +7,4 @@ resources:
   - ingress.yaml
   - pvc.yaml
   - configmap.yaml
+  - rbac.yaml

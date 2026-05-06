@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'kubernetes' => [
+        'host' => env('KUBERNETES_HOST', 'https://kubernetes.default.svc'),
+        'token_path' => env('KUBERNETES_TOKEN_PATH', '/var/run/secrets/kubernetes.io/serviceaccount/token'),
+        'token' => env('KUBERNETES_TOKEN'),
+        'ca_path' => env('KUBERNETES_CA_PATH', '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'),
+        'cert_path' => env('KUBERNETES_CERT_PATH'),
+        'key_path' => env('KUBERNETES_KEY_PATH'),
+    ],
 ];

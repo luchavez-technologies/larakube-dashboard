@@ -9,7 +9,9 @@
         "php": "^8.3",
         "filament/filament": "*",
         "laravel/framework": "^13.0",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "saloonphp/laravel-plugin": "^4.0",
+        "saloonphp/saloon": "^4.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

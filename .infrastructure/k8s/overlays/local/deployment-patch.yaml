@@ -11,8 +11,14 @@ spec:
           volumeMounts:
             - name: code
               mountPath: /var/www/html
+            - name: larakube-cli-db
+              mountPath: /var/lib/larakube
       volumes:
         - name: code
           hostPath:
             path: /Users/jsluchavez/Codes/Ideas/laravel-k8s/dashboard
             type: Directory
+        - name: larakube-cli-db
+          hostPath:
+            path: /Users/jsluchavez/.larakube
+            type: DirectoryOrCreate
