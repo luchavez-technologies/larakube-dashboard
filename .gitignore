@@ -24,3 +24,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+backups/
+.infrastructure/k8s/overlays/local
+
+# LaraKube Local Infrastructure (Dynamic paths)
