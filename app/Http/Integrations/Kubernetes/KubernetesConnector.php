@@ -57,7 +57,6 @@ class KubernetesConnector extends Connector
 
     protected function defaultAuth(): ?TokenAuthenticator
     {
-
         $token = Cache::remember('kubernetes-client-token', now()->addHour(), function () {
             $tokenPath = config('services.kubernetes.token_path');
 
@@ -69,6 +68,10 @@ class KubernetesConnector extends Connector
 
             return $token;
         });
+
+        if (empty($token)) {
+            return null;
+        }
 
         return new TokenAuthenticator($token);
     }
