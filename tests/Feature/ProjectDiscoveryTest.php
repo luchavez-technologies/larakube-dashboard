@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\File;
 use App\Models\User;
 use Saloon\Http\Faking\MockResponse;
 use App\Http\Integrations\Kubernetes\Requests\GetNamespacesRequest;
+use Saloon\Laravel\Facades\Saloon;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -53,7 +54,7 @@ it('can discover projects on disk', function () {
 
 it('can detect ghost projects from the cluster', function () {
     $service = new ProjectDiscoveryService();
-    \Saloon\Laravel\Facades\Saloon::fake([
+    Saloon::fake([
         GetNamespacesRequest::class => MockResponse::make([
             'items' => [
                 [
@@ -67,6 +68,7 @@ it('can detect ghost projects from the cluster', function () {
                 ]
             ],
         ], 200),
+        '*' => MockResponse::make([], 200),
     ]);
 
     $results = $service->discoverFromCluster(collect([]));
