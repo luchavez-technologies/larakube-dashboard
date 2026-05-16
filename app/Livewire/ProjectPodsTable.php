@@ -16,6 +16,8 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -51,10 +53,52 @@ class ProjectPodsTable extends Component implements HasActions, HasSchemas, HasT
                     ->searchable()
                     ->fontFamily(FontFamily::Mono)
                     ->copyable(),
+                TextColumn::make('ready')
+                    ->label('Ready')
+                    ->state(function (array $record) {
+                        $statuses = collect($record['status']['containerStatuses'] ?? []);
+                        $readyCount = $statuses->where('ready', true)->count();
+                        $totalCount = $statuses->count();
+
+                        return "{$readyCount}/{$totalCount}";
+                    })
+                    ->alignCenter(),
                 TextColumn::make('status_phase')
                     ->label('Status')
-                    ->state(fn (array $record) => PodStatus::tryFrom($record['status']['phase'] ?? 'Unknown'))
-                    ->badge(),
+                    ->state(function (array $record) {
+                        $phase = $record['status']['phase'] ?? 'Unknown';
+
+                        // Check for container waiting reasons (e.g. CrashLoopBackOff, ImagePullBackOff)
+                        $containerStatuses = collect($record['status']['containerStatuses'] ?? []);
+                        $waitingContainer = $containerStatuses->first(fn ($s) => isset($s['state']['waiting']));
+
+                        if ($waitingContainer) {
+                            return $waitingContainer['state']['waiting']['reason'];
+                        }
+
+                        // Check for Init Containers if phase is Pending or we have init container statuses
+                        $initStatuses = collect($record['status']['initContainerStatuses'] ?? []);
+                        $unfinishedInit = $initStatuses->first(fn ($s) => ! ($s['ready'] ?? false));
+
+                        if ($unfinishedInit) {
+                            $reason = $unfinishedInit['state']['waiting']['reason'] ?? ($unfinishedInit['state']['running'] ? 'Initializing' : 'Init');
+
+                            return "Init: {$reason}";
+                        }
+
+                        return PodStatus::tryFrom($phase) ?? $phase;
+                    })
+                    ->badge()
+                    ->color(function ($state) {
+                        $status = $state instanceof \BackedEnum ? $state->value : (string) $state;
+
+                        return match (true) {
+                            Str::contains($status, 'Error') || Str::contains($status, 'BackOff') || $status === 'Failed' => 'danger',
+                            Str::contains($status, 'Init') || $status === 'Pending' => 'warning',
+                            $status === 'Running' || $status === 'Succeeded' => 'success',
+                            default => 'gray',
+                        };
+                    }),
                 TextColumn::make('restarts')
                     ->label('Restarts')
                     ->state(function (array $record) {
@@ -80,6 +124,26 @@ class ProjectPodsTable extends Component implements HasActions, HasSchemas, HasT
                     ->color('gray')
                     ->fontFamily(FontFamily::Mono)
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->recordActions([
+                Action::make('logs')
+                    ->label('Logs')
+                    ->icon('heroicon-m-document-text')
+                    ->color('info')
+                    ->button()
+                    ->modalHeading(fn (array $record) => "Logs: {$record['metadata']['name']}")
+                    ->modalWidth('7xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn (array $record) => new HtmlString(
+                        Blade::render(
+                            "@livewire('project-logs', ['record' => \$record, 'selectedPod' => \$selectedPod, 'hideSelector' => true])",
+                            [
+                                'record' => $this->record,
+                                'selectedPod' => $record['metadata']['name'],
+                            ]
+                        )
+                    )),
             ]);
     }
 

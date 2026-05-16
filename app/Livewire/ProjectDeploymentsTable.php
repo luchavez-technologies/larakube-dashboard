@@ -4,9 +4,12 @@ namespace App\Livewire;
 
 use App\Enums\DeploymentStatus;
 use App\Models\Project;
+use App\Services\KubernetesService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\Slider;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Enums\FontFamily;
@@ -82,7 +85,48 @@ class ProjectDeploymentsTable extends Component implements HasActions, HasSchema
                     ->color('gray'),
             ])
             ->recordActions([
-                //
+                Action::make('restart')
+                    ->label('Restart')
+                    ->icon('heroicon-m-arrow-path')
+                    ->color('warning')
+                    ->button()
+                    ->requiresConfirmation()
+                    ->modalHeading('Restart Deployment')
+                    ->modalDescription('This will trigger a zero-downtime rollout restart of the deployment.')
+                    ->action(function (array $record, KubernetesService $service) {
+                        $service->restartDeployment($record['metadata']['namespace'], $record['metadata']['name']);
+
+                        Notification::make()
+                            ->title('Rollout Restart Triggered')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('scale')
+                    ->label('Scale')
+                    ->icon('heroicon-m-adjustments-vertical')
+                    ->color('info')
+                    ->button()
+                    ->schema([
+                        Slider::make('replicas')
+                            ->label('Target Replicas')
+                            ->range(0, 10)
+                            ->step(1)
+                            ->pips(Slider\Enums\PipsMode::Steps)
+                            ->required(),
+                    ])
+                    ->fillForm(fn (array $record) => [
+                        'replicas' => $record['spec']['replicas'] ?? 1,
+                    ])
+                    ->action(function (array $record, array $data, KubernetesService $service) {
+                        $service->scaleDeployment($record['metadata']['namespace'], $record['metadata']['name'], (int) $data['replicas']);
+
+                        Notification::make()
+                            ->title('Scaling Initiated')
+                            ->body("Scaling {$record['metadata']['name']} to {$data['replicas']} replicas.")
+                            ->success()
+                            ->send();
+                    }),
             ]);
     }
 

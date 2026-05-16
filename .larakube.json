@@ -1,25 +1,36 @@
 {
     "id": "37845086-4fb1-48f8-8096-bd349e06f3ca",
-    "name": "dashboard",
-    "path": "/Users/jsluchavez/Codes/Ideas/laravel-k8s/dashboard",
-    "blueprint": "filament",
+    "name": "console",
+    "blueprints": [
+        "filament"
+    ],
     "serverVariation": "fpm-nginx",
     "frontend": null,
     "phpVersion": null,
     "os": null,
     "email": "james@luchtech.dev",
     "additionalExtensions": [],
-    "features": [],
-    "scoutDriver": null,
-    "packageManager": "npm",
-    "objectStorage": "none",
-    "cacheDriver": "database",
-    "databases": [
-        "sqlite"
+    "features": [
+        "queues",
+        "boost"
     ],
+    "scoutDriver": null,
+    "scoutDrivers": [],
+    "packageManager": "npm",
+    "objectStorage": null,
+    "objectStorages": [],
+    "cacheDriver": "database",
+    "cacheDrivers": [],
+    "database": "sqlite",
+    "databases": [],
     "environments": [
         "local",
         "production"
     ],
-    "githubActions": true
+    "production_image": null,
+    "githubActions": true,
+    "is_system": true,
+    "locked_files": [
+        "Dockerfile.php"
+    ]
 }

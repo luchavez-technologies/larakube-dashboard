@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Traits;
+
+trait InteractsWithLaraKubeCli
+{
+    /**
+     * Get the resolved LaraKube binary path for the current environment.
+     */
+    protected function getLaraKubeBinary(): string
+    {
+        // 1. Fixed path in production/docker
+        if (file_exists('/usr/local/bin/larakube')) {
+            return '/usr/local/bin/larakube';
+        }
+
+        // 2. Fallback to global path
+        return 'larakube';
+    }
+
+    /**
+     * Get the raw list of all available LaraKube commands.
+     */
+    protected function listCliCommands(): string
+    {
+        $bin = $this->getLaraKubeBinary();
+
+        return shell_exec("{$bin} list --raw") ?? '';
+    }
+
+    /**
+     * Get the help output for a specific command.
+     */
+    protected function getCliCommandHelp(string $command): string
+    {
+        $bin = $this->getLaraKubeBinary();
+
+        return shell_exec("{$bin} help {$command}") ?? "No help found for command: {$command}";
+    }
+
+    /**
+     * Execute a LaraKube command with built-in safety and automation flags.
+     */
+    protected function executeCliCommand(string $command): array
+    {
+        $bin = $this->getLaraKubeBinary();
+
+        // Security: Remove 'larakube' prefix if the AI included it, we will add it back correctly
+        $command = preg_replace('/^larakube\s+/', '', $command);
+
+        $finalCommand = "{$bin} {$command}";
+
+        // Add non-interactive flags automatically
+        if (! str_contains($finalCommand, '--no-interaction')) {
+            $finalCommand .= ' --no-interaction';
+        }
+
+        // Force destruction for safety/automation
+        if (str_contains($finalCommand, ' down') && ! str_contains($finalCommand, '--force')) {
+            $finalCommand .= ' --force';
+        }
+
+        exec($finalCommand, $output, $resultCode);
+
+        return [
+            'command' => $finalCommand,
+            'output' => implode("\n", $output),
+            'exit_code' => $resultCode,
+            'success' => $resultCode === 0,
+        ];
+    }
+
+    /**
+     * Get the unified AI instructions with dynamic project context.
+     */
+    protected function getAiInstructions(): string
+    {
+        $path = base_path('resources/ai/larakube-assistant.md');
+        $instructions = file_exists($path) ? file_get_contents($path) : 'You are LaraKube, a professional autonomous Kubernetes orchestrator for Laravel.';
+
+        // 1. Detect existing LaraKube project
+        $isLaraKubeProject = file_exists(getcwd().'/.larakube.json');
+
+        // 2. Detect uninitialized Laravel project (Must have BOTH)
+        $isLaravelProject = file_exists(getcwd().'/composer.json') && file_exists(getcwd().'/artisan');
+
+        if ($isLaraKubeProject) {
+            $context = "\n\n### CURRENT CONTEXT:\n- You ARE currently inside an existing LaraKube project (detected .larakube.json).\n- DO NOT suggest or execute 'new' or 'init' here to avoid conflicts.\n- Focus on 'add', 'up', 'down', 'heal', or 'doctor' commands.";
+        } elseif ($isLaravelProject) {
+            $context = "\n\n### CURRENT CONTEXT:\n- You are inside a Laravel project that is NOT yet a LaraKube project.\n- Suggest 'init' to initialize LaraKube for this project.\n- DO NOT suggest 'new' here as it would create a nested directory.";
+        } else {
+            $context = "\n\n### CURRENT CONTEXT:\n- You are in a blank or non-Laravel directory.\n- Suggest 'new' to create a fresh LaraKube project from scratch.";
+        }
+
+        return $instructions.$context;
+    }
+}

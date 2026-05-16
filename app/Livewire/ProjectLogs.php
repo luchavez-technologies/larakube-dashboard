@@ -4,6 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Project;
 use App\Services\KubernetesService;
+use Exception;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class ProjectLogs extends Component
@@ -12,10 +15,22 @@ class ProjectLogs extends Component
 
     public string $logs = 'Initializing logs...';
 
+    protected array $queryString = [
+        'selectedPod' => ['except' => ''],
+    ];
+
     public ?string $selectedPod = null;
 
-    public function mount(): void
+    public bool $hideSelector = false;
+
+    public function mount(?string $selectedPod = null, bool $hideSelector = false): void
     {
+        $this->hideSelector = $hideSelector;
+
+        if ($selectedPod) {
+            $this->selectedPod = $selectedPod;
+        }
+
         $this->loadPods();
     }
 
@@ -24,7 +39,9 @@ class ProjectLogs extends Component
         $pods = $this->record?->pods;
 
         if ($pods?->isNotEmpty()) {
-            $this->selectedPod = data_get($pods->first(), 'metadata.name');
+            if (! $this->selectedPod) {
+                $this->selectedPod = data_get($pods->first(), 'metadata.name');
+            }
             $this->refreshLogs();
         }
     }
@@ -41,12 +58,12 @@ class ProjectLogs extends Component
                 $this->selectedPod
             );
             $this->dispatch('log-updated');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logs = 'Failed to load logs: '.$e->getMessage();
         }
     }
 
-    public function render()
+    public function render(): View|Factory
     {
         return view('livewire.project-logs');
     }

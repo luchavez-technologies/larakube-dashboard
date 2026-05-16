@@ -2,7 +2,7 @@
 
 namespace App\Http\Integrations\Kubernetes;
 
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Saloon\Http\Auth\TokenAuthenticator;
 use Saloon\Http\Connector;
@@ -33,39 +33,42 @@ class KubernetesConnector extends Connector
      */
     protected function defaultConfig(): array
     {
-        $options = [];
+        return Cache::remember('kubernetes-client-options', now()->addHour(), function () {
+            $options = [];
 
-        $caPath = config('services.kubernetes.ca_path');
-        $certPath = config('services.kubernetes.cert_path');
-        $keyPath = config('services.kubernetes.key_path');
+            $caPath = config('services.kubernetes.ca_path');
+            $certPath = config('services.kubernetes.cert_path');
+            $keyPath = config('services.kubernetes.key_path');
 
-        if ($caPath && File::exists($caPath)) {
-            $options['verify'] = $caPath;
-        } else {
-            $options['verify'] = false;
-        }
+            if ($caPath && File::exists($caPath)) {
+                $options['verify'] = $caPath;
+            } else {
+                $options['verify'] = false;
+            }
 
-        if ($certPath && $keyPath && File::exists($certPath) && File::exists($keyPath)) {
-            $options['cert'] = $certPath;
-            $options['ssl_key'] = $keyPath;
-        }
+            if ($certPath && $keyPath && File::exists($certPath) && File::exists($keyPath)) {
+                $options['cert'] = $certPath;
+                $options['ssl_key'] = $keyPath;
+            }
 
-        return $options;
+            return $options;
+        });
     }
 
-    /**
-     * @throws FileNotFoundException
-     */
     protected function defaultAuth(): ?TokenAuthenticator
     {
 
-        $tokenPath = config('services.kubernetes.token_path');
+        $token = Cache::remember('kubernetes-client-token', now()->addHour(), function () {
+            $tokenPath = config('services.kubernetes.token_path');
 
-        if ($tokenPath && File::exists($tokenPath)) {
-            $token = File::get($tokenPath);
-        } else {
-            $token = config('services.kubernetes.token');
-        }
+            if ($tokenPath && File::exists($tokenPath)) {
+                $token = File::get($tokenPath);
+            } else {
+                $token = config('services.kubernetes.token');
+            }
+
+            return $token;
+        });
 
         return new TokenAuthenticator($token);
     }

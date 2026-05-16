@@ -51,11 +51,36 @@ class ProjectIngressesTable extends Component implements HasActions, HasSchemas,
                 TextColumn::make('hosts')
                     ->label('Hosts')
                     ->state(fn (array $record) => collect($record['spec']['rules'] ?? [])->map(fn ($r) => $r['host'] ?? '')->implode(', '))
-                    ->copyable(),
+                    ->url(function (array $record) {
+                        $host = collect($record['spec']['rules'] ?? [])->first()['host'] ?? null;
+                        if (! $host) {
+                            return null;
+                        }
+
+                        return "https://{$host}";
+                    })
+                    ->openUrlInNewTab()
+                    ->color('primary'),
                 TextColumn::make('spec.ingressClassName')
                     ->label('Controller')
                     ->badge()
                     ->color('info'),
+            ])
+            ->recordActions([
+                Action::make('visit')
+                    ->label('Visit')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->color('info')
+                    ->button()
+                    ->url(function (array $record) {
+                        $host = collect($record['spec']['rules'] ?? [])->first()['host'] ?? null;
+                        if (! $host) {
+                            return null;
+                        }
+
+                        return "https://{$host}";
+                    })
+                    ->openUrlInNewTab(),
             ]);
     }
 

@@ -1,9 +1,13 @@
 {
     "mcpServers": {
+        "larakube-console": {
+            "url": "https://console.dev.test/larakube"
+        },
         "laravel-boost": {
             "command": "larakube",
             "args": [
-                "art",
+                "php",
+                "artisan",
                 "boost:mcp"
             ]
         }

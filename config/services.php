@@ -43,4 +43,8 @@ return [
         'cert_path' => env('KUBERNETES_CERT_PATH'),
         'key_path' => env('KUBERNETES_KEY_PATH'),
     ],
+
+    'larakube' => [
+        'host_workspace' => env('LARAKUBE_HOST_WORKSPACE'),
+    ],
 ];
